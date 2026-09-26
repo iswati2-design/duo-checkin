@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>扫码进入语伴打卡</title>
+<style>
+  :root { --ink:#1f2937; --muted:#8a94a6; --line:#eae3da; --primary:#12a594; }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; min-height:100vh; background:#fbf7f2; color:var(--ink);
+    font:15px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:32px 20px;
+    background-image:radial-gradient(120% 60% at 50% 0%, #fff6e9 0%, rgba(255,246,233,0) 60%);
+  }
+  .card {
+    background:#fff; border:1px solid var(--line); border-radius:24px; padding:34px 38px;
+    box-shadow:0 2px 6px rgba(31,41,55,.06), 0 18px 40px rgba(31,41,55,.08);
+    max-width:620px; width:100%; text-align:center;
+  }
+  h1 { font-size:24px; margin:0 0 6px; letter-spacing:.3px; }
+  .sub { color:var(--muted); font-size:14px; margin-bottom:22px; }
+  .qrbox {
+    width:340px; height:340px; margin:0 auto; border-radius:20px; background:#fff;
+    border:1px dashed var(--line); display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .qrbox img { width:100%; height:100%; object-fit:contain; }
+  .qrbox .loading { color:var(--muted); font-size:13px; padding:20px; }
+  .url {
+    margin:22px auto 0; background:#fcfaf7; border:1.5px dashed var(--line); border-radius:14px;
+    padding:14px 16px; font-size:15px; font-weight:700; word-break:break-all; color:var(--primary);
+    user-select:all; -webkit-user-select:all;
+  }
+  .row { display:flex; gap:10px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
+  button, a.btn {
+    border:0; border-radius:12px; padding:12px 22px; font-size:15px; font-weight:700;
+    cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px;
+  }
+  .primary { background:var(--primary); color:#fff; }
+  .ghost { background:#fff; color:var(--ink); border:1.5px solid var(--line); }
+  .steps { text-align:left; margin:24px auto 0; max-width:430px; color:var(--ink); font-size:14px; }
+  .steps li { margin:7px 0; }
+  .steps b { color:var(--primary); }
+  .tip { margin-top:20px; font-size:12.5px; color:var(--muted); line-height:1.8; }
+  @media (max-width:520px) { .qrbox { width:250px; height:250px; } .card { padding:24px 20px; } }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>📚 扫码进入「语伴打卡」</h1>
+  <div class="sub">手机微信「扫一扫」这个二维码,即可在微信里直接打卡</div>
+
+  <div class="qrbox" id="qrbox"><div class="loading">二维码加载中…</div></div>
+
+  <div class="url" id="url"></div>
+
+  <div class="row">
+    <button class="primary" id="copy">📋 复制链接</button>
+    <a class="btn ghost" id="open" target="_blank" rel="noopener">↗ 在这台电脑打开</a>
+  </div>
+
+  <ol class="steps">
+    <li>手机打开<b>微信 → 右上角「+」→ 扫一扫</b>,扫描上面的二维码;</li>
+    <li>第一台手机:点「创建房间」→ 得到 <b>6 位邀请码</b>;</li>
+    <li>把邀请码告诉语伴(或点「邀请语伴」把链接发到微信聊天里),TA 点开就能加入;</li>
+    <li>之后两台手机都能看到对方今天的打卡状态,实时同步。</li>
+  </ol>
+
+  <div class="tip">
+    小技巧:在微信里点右上角 <b>⋯ → 浮窗</b>,以后从微信左滑就能一键打开;<br/>
+    或在 ⋯ 里选「在浏览器打开」再「添加到主屏幕」,像 App 一样用。<br/>
+    电脑需要保持开机、本窗口不要关闭,链接才有效。
+  </div>
+</div>
+
+<script>
+  var params = new URLSearchParams(location.search);
+  var target = params.get('u') || params.get('url') || location.origin;
+  document.getElementById('url').textContent = target;
+  document.getElementById('open').href = target;
+
+  // 国内二维码服务优先,失败自动换备用源
+  var sources = [
+    'https://api.pwmqr.com/qrcode/create/?url=' + encodeURIComponent(target),
+    'https://api.qrserver.com/v1/create-qr-code/?size=460x460&margin=12&data=' + encodeURIComponent(target),
+    'https://api.pwmqr.com/qrcode/create/?url=' + encodeURIComponent(target) + '&size=460'
+  ];
+  var box = document.getElementById('qrbox');
+  var index = 0;
+  function tryNext() {
+    if (index >= sources.length) {
+      box.innerHTML = '<div class="loading">二维码服务暂时不可用<br/>请直接复制下面的链接发到微信</div>';
+      return;
+    }
+    var img = new Image();
+    img.alt = '扫码进入语伴打卡';
+    img.onload = function () { box.innerHTML = ''; box.appendChild(img); };
+    img.onerror = function () { index += 1; tryNext(); };
+    img.src = sources[index];
+  }
+  tryNext();
+
+  document.getElementById('copy').addEventListener('click', function () {
+    var btn = this;
+    function done(ok) {
+      btn.textContent = ok ? '✅ 已复制' : '请长按上方链接复制';
+      setTimeout(function () { btn.textContent = '📋 复制链接'; }, 2200);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(target).then(function () { done(true); }, function () { fallback(); });
+    } else { fallback(); }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = target; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        var ok = document.execCommand('copy'); ta.remove(); done(ok);
+      } catch (e) { done(false); }
+    }
+  });
+</script>
+</body>
+</html>
