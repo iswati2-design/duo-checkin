@@ -1,0 +1,26 @@
+{
+  "name": "语伴打卡 · 双人语言学习监督",
+  "short_name": "语伴打卡",
+  "description": "两个人每天互相监督完成语言学习任务",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbf7f2",
+  "theme_color": "#12a594",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
